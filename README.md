@@ -167,6 +167,18 @@ Agent sudah pre-configure beberapa pattern insiden:
 
 Tambahkan pattern sendiri di `config.yaml` di bawah `syslog.patterns`.
 
+## Notifikasi Telegram (ChatOps Bot)
+
+Agent dilengkapi dengan integrasi Telegram Bot interaktif (format alert enterprise Clarissa-style dengan 4 tombol inline keyboard untuk mitigasi cepat).
+
+Panduan lengkap setup bot dan chat ID:
+👉 [Panduan Setup Notifikasi Telegram](docs/TELEGRAM_SETUP_GUIDE.md)
+
+Uji coba notifikasi:
+```bash
+python scripts/test_telegram_bot.py --mock
+```
+
 ## Output
 
 - **PDF report**: `output/report_YYYYMMDD_HHMMSS.pdf`
