@@ -1,0 +1,41 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: server-monitoring-agent
+  namespace: monitoring
+  labels:
+    app: server-monitoring-agent
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: server-monitoring-agent-reader
+  labels:
+    app: server-monitoring-agent
+rules:
+  # Core K8s resources (Read-Only)
+  - apiGroups: [""]
+    resources: ["pods", "pods/log", "nodes", "events", "namespaces", "persistentvolumeclaims"]
+    verbs: ["get", "list", "watch"]
+  # Apps resources (Read-Only)
+  - apiGroups: ["apps"]
+    resources: ["deployments", "statefulsets", "daemonsets"]
+    verbs: ["get", "list", "watch"]
+  # Longhorn distributed storage CRDs (Read-Only)
+  - apiGroups: ["longhorn.io"]
+    resources: ["volumes", "replicas", "nodes"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: server-monitoring-agent-binding
+subjects:
+  - kind: ServiceAccount
+    name: server-monitoring-agent
+    namespace: monitoring
+roleRef:
+  kind: ClusterRole
+  name: server-monitoring-agent-reader
+  apiGroup: rbac.authorization.k8s.io
+

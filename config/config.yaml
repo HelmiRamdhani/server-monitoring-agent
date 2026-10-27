@@ -1,0 +1,77 @@
+# Server Monitoring Agent - Configuration File
+# Platform Bigdata - IT Ops & Incident Co-Pilot
+
+server:
+  host: "localhost"
+  label: "Platform-Bigdata-Node"
+  os: ""
+
+thresholds:
+  cpu_warning: 75
+  cpu_critical: 90
+  memory_warning: 80
+  memory_critical: 92
+  disk_warning: 80
+  disk_critical: 90
+  uptime_min_seconds: 300
+
+syslog:
+  log_files:
+    - "tests/fixtures/sample_syslog.log"
+  tail_lines: 500
+  patterns:
+    - name: "SSH failed login"
+      regex: "Failed password|Invalid user"
+      severity: "warning"
+    - name: "Service crash"
+      regex: "segfault|core dumped|killed process"
+      severity: "critical"
+    - name: "Out of memory"
+      regex: "Out of memory|oom-killer|oom_kill"
+      severity: "critical"
+    - name: "Disk full"
+      regex: "No space left on device|disk full"
+      severity: "critical"
+    - name: "Kernel panic"
+      regex: "kernel panic|not syncing"
+      severity: "critical"
+    - name: "Connection refused"
+      regex: "Connection refused|connection timed out"
+      severity: "warning"
+    - name: "General error"
+      regex: "\\[ERROR\\]|ERROR|FATAL"
+      severity: "error"
+
+report:
+  output_dir: "output"
+  filename_pattern: "report_%Y%m%d_%H%M%S.pdf"
+  team_name: "Platform Bigdata Operations"
+  include_chart: false
+
+email:
+  enabled: false
+
+teams:
+  enabled: false
+
+telegram:
+  enabled: true
+  bot_token: "8626517356:AAEPp5x9DdHC1YAbw0c8eCVjm7HTo6C7FaU"
+  chat_id: "6622084716"
+  send_pdf: false
+
+schedule:
+  interval_minutes: 30
+  run_once: true
+
+agent_log:
+  level: "INFO"
+  file: "output/agent.log"
+
+webhook:
+  host: "0.0.0.0"
+  port: 8080
+
+knowledge_base:
+  dir: "kb"
+

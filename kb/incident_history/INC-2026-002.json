@@ -1,0 +1,30 @@
+{
+  "incident_id": "INC-2026-002",
+  "date": "2026-09-03",
+  "server": "db-prod-01",
+  "severity": "critical",
+  "title": "PostgreSQL crash due to disk full on data partition",
+  "symptoms": [
+    "PostgreSQL service crashed unexpectedly",
+    "Application returned 500 errors on all database queries",
+    "Monitoring showed /var/lib/postgresql at 99% usage",
+    "syslog: 'No space left on device' on /dev/sdb1"
+  ],
+  "root_cause": "WAL (Write-Ahead Log) files accumulated without archiving due to misconfigured archive_command in postgresql.conf",
+  "resolution": "1. Identified WAL files consuming 180GB of 200GB partition. 2. Safely removed old WAL files that were already archived. 3. Restarted PostgreSQL. 4. Fixed archive_command to use proper pg_wal archive path. 5. Set up automated WAL retention policy. 6. Added disk monitoring alert at 80%.",
+  "sop_used": "sop-disk-full",
+  "diagnosis_commands_run": [
+    "df -h",
+    "du -sh /var/lib/postgresql/data/pg_wal/* | sort -rh | head -10",
+    "systemctl status postgresql",
+    "journalctl -u postgresql --since '30 min ago'"
+  ],
+  "time_to_resolve": "25 minutes",
+  "follow_up": "Configure automated WAL archival, set up partition monitoring, plan disk expansion to 500GB",
+  "pattern_signatures": [
+    "no space left on device",
+    "disk full",
+    "postgresql",
+    "WAL archive"
+  ]
+}

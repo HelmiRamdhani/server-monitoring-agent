@@ -1,0 +1,39 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual Environment
+venv/
+.venv/
+env/
+ENV/
+
+# Testing & Cache
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Environment variables / Local secrets
+.env
+.env.local
+
+# Runtime logs & generated incident reports
+output/report_*.pdf
+output/test_*.pdf
+output/agent.log
+output/post_mortems/
+output/test_*.png
+output/temp_*
+
+# Dynamic test & runtime incident records (keep seed INC-2026-001..003)
+kb/incident_history/TEST-*.json
+kb/incident_history/INC-202610*.json
+
+# IDE & OS files
+.idea/
+.vscode/
+*.swp
+*.swo
+Thumbs.db
+Desktop.ini

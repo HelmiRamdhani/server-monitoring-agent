@@ -1,0 +1,21 @@
+Oct 23 09:01:15 web-prod-01 sshd[12345]: Failed password for root from 192.168.1.100 port 55123 ssh2
+Oct 23 09:01:16 web-prod-01 sshd[12345]: Failed password for root from 192.168.1.100 port 55124 ssh2
+Oct 23 09:01:17 web-prod-01 sshd[12345]: Invalid user admin from 192.168.1.100 port 55125
+Oct 23 09:05:22 web-prod-01 kernel: [15423.456789] Out of memory: Kill process 8899 (php-fpm) score 950 or sacrifice child
+Oct 23 09:05:22 web-prod-01 kernel: [15423.456790] Killed process 8899 (php-fpm) total-vm:4562340kB, anon-rss:3987654kB
+Oct 23 09:05:23 web-prod-01 systemd[1]: php-fpm.service: Main process exited, code=killed, status=9/KILL
+Oct 23 09:05:24 web-prod-01 kernel: [15423.567890] oom-killer invoked for process 8899
+Oct 23 09:10:00 web-prod-01 nginx[2345]: 2026/10/23 09:10:00 [ERROR] 2345#2345: *12345 connect() failed (111: Connection refused) while connecting to upstream
+Oct 23 09:10:05 web-prod-01 app-worker[5678]: segfault at 0000000000000000 ip 00007f1234567890 sp 00007ffc12345678 error 4 in libpthread-2.31.so[7f1234500000+16000]
+Oct 23 09:10:06 web-prod-01 kernel: [15480.123456] app-worker[5678]: core dumped
+Oct 23 09:15:00 web-prod-01 systemd[1]: Starting Daily apt activities...
+Oct 23 09:15:01 web-prod-01 cron[999]: (root) CMD (/usr/local/bin/backup.sh)
+Oct 23 09:20:00 web-prod-01 nginx[2345]: 2026/10/23 09:20:00 [notice] Reloading configuration
+Oct 23 09:25:33 web-prod-01 kernel: [16234.789012] EXT4-fs (sda1): No space left on device
+Oct 23 09:25:34 web-prod-01 app-worker[5679]: FATAL: could not write to log file: No space left on device
+Oct 23 09:30:00 web-prod-01 sshd[12346]: Failed password for invalid user test from 10.0.0.5 port 44321 ssh2
+Oct 23 09:30:01 web-prod-01 sshd[12346]: Failed password for invalid user admin from 10.0.0.5 port 44322 ssh2
+Oct 23 09:30:02 web-prod-01 sshd[12346]: Failed password for root from 10.0.0.5 port 44323 ssh2
+Oct 23 09:35:00 web-prod-01 systemd[1]: php-fpm.service: Scheduled restart job, restart counter is at 3.
+Oct 23 09:40:00 web-prod-01 nginx[2345]: 2026/10/23 09:40:00 [notice] signal process started
+

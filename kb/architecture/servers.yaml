@@ -1,0 +1,92 @@
+# Server Architecture - Internal Infrastructure
+
+# This file describes the server architecture for the knowledge base.
+# Agent uses this to understand service dependencies and escalation paths.
+
+servers:
+  - hostname: "web-prod-01"
+    role: "web server"
+    os: "linux"
+    criticality: "high"
+    services:
+      - nginx
+      - php-fpm
+      - node-app
+    dependencies:
+      - db-prod-01
+      - redis-prod-01
+    ip: "10.0.1.10"
+    escalation: "web-team"
+
+  - hostname: "web-prod-02"
+    role: "web server"
+    os: "linux"
+    criticality: "high"
+    services:
+      - nginx
+      - php-fpm
+      - node-app
+    dependencies:
+      - db-prod-01
+      - redis-prod-01
+    ip: "10.0.1.11"
+    escalation: "web-team"
+
+  - hostname: "db-prod-01"
+    role: "database server"
+    os: "linux"
+    criticality: "critical"
+    services:
+      - postgresql
+      - pgbouncer
+    dependencies: []
+    ip: "10.0.2.10"
+    escalation: "dba-team"
+
+  - hostname: "redis-prod-01"
+    role: "cache server"
+    os: "linux"
+    criticality: "high"
+    services:
+      - redis-server
+    dependencies: []
+    ip: "10.0.2.20"
+    escalation: "infra-team"
+
+  - hostname: "app-prod-01"
+    role: "application server"
+    os: "linux"
+    criticality: "high"
+    services:
+      - docker
+      - app-worker
+    dependencies:
+      - db-prod-01
+      - redis-prod-01
+    ip: "10.0.3.10"
+    escalation: "app-team"
+
+service_escalation:
+  nginx: "web-team"
+  postgresql: "dba-team"
+  redis: "infra-team"
+  docker: "app-team"
+  sshd: "infra-team"
+
+network_zones:
+  - name: "dmz"
+    range: "10.0.1.0/24"
+    description: "web servers - internet facing"
+  - name: "db-zone"
+    range: "10.0.2.0/24"
+    description: "database servers - internal only"
+  - name: "app-zone"
+    range: "10.0.3.0/24"
+    description: "application servers - internal only"
+
+contacts:
+  infra-team: "#infra-alerts"
+  web-team: "#web-ops"
+  dba-team: "#dba-alerts"
+  app-team: "#app-ops"
+  on-call: "#on-call-rotation"

@@ -1,0 +1,56 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: server-monitoring-agent-config
+  namespace: monitoring
+  labels:
+    app: server-monitoring-agent
+data:
+  config.yaml: |
+    server:
+      host: "k8s-cluster"
+      label: "Platform-Bigdata-Cluster"
+      os: "Linux"
+
+    thresholds:
+      cpu_warning: 80
+      cpu_critical: 90
+      memory_warning: 85
+      memory_critical: 92
+      disk_warning: 80
+      disk_critical: 90
+      uptime_min_seconds: 300
+
+    report:
+      output_dir: "/app/output"
+      filename_pattern: "report_%Y%m%d_%H%M%S.pdf"
+      team_name: "Platform Bigdata Operations"
+      include_chart: false
+
+    email:
+      enabled: false
+
+    teams:
+      enabled: false
+
+    telegram:
+      enabled: true
+      bot_token: ""  # Set via TELEGRAM_BOT_TOKEN environment variable / Secret
+      chat_id: ""    # Set via TELEGRAM_CHAT_ID environment variable / Secret
+      send_pdf: true
+
+    schedule:
+      interval_minutes: 30
+      run_once: false
+
+    agent_log:
+      level: "INFO"
+      file: "/app/output/agent.log"
+
+    webhook:
+      host: "0.0.0.0"
+      port: 8080
+
+    knowledge_base:
+      dir: "/app/kb"
+

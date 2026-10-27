@@ -1,0 +1,88 @@
+# Server Monitoring Agent - Testing Configuration
+# Safe for local testing: no external calls, no email, no Teams
+
+server:
+  host: "localhost"
+  label: "Test-Server-01"
+  os: ""
+
+thresholds:
+  cpu_warning: 75
+  cpu_critical: 90
+  memory_warning: 80
+  memory_critical: 92
+  disk_warning: 80
+  disk_critical: 90
+  uptime_min_seconds: 300
+
+syslog:
+  log_files:
+    - "tests/fixtures/sample_syslog.log"
+  tail_lines: 500
+  patterns:
+    - name: "SSH failed login"
+      regex: "Failed password|Invalid user"
+      severity: "warning"
+    - name: "Service crash"
+      regex: "segfault|core dumped|killed process"
+      severity: "critical"
+    - name: "Out of memory"
+      regex: "Out of memory|oom-killer|oom_kill"
+      severity: "critical"
+    - name: "Disk full"
+      regex: "No space left on device|disk full"
+      severity: "critical"
+    - name: "Kernel panic"
+      regex: "kernel panic|not syncing"
+      severity: "critical"
+    - name: "Connection refused"
+      regex: "Connection refused|connection timed out"
+      severity: "warning"
+    - name: "General error"
+      regex: "\\[ERROR\\]|ERROR|FATAL"
+      severity: "error"
+
+report:
+  output_dir: "output"
+  filename_pattern: "report_%Y%m%d_%H%M%S.pdf"
+  team_name: "Tim Testing"
+  include_chart: false
+
+# Notifications DISABLED for safe local testing
+email:
+  enabled: false
+
+teams:
+  enabled: false
+
+telegram:
+  enabled: false
+  bot_token: ""
+  chat_id: ""
+  send_pdf: true
+
+schedule:
+  interval_minutes: 30
+  run_once: true
+
+agent_log:
+  level: "DEBUG"
+  file: "output/agent.log"
+
+webhook:
+  host: "127.0.0.1"
+  port: 8080
+
+knowledge_base:
+  dir: "kb"
+
+monitoring_api:
+  type: ""
+  url: ""
+  api_token: ""
+
+ticketing_api:
+  type: ""
+  url: ""
+  token: ""
+

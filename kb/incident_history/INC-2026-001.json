@@ -1,0 +1,29 @@
+{
+  "incident_id": "INC-2026-001",
+  "date": "2026-08-15",
+  "server": "web-prod-01",
+  "severity": "critical",
+  "title": "OOM killer terminated nginx causing 15 min downtime",
+  "symptoms": [
+    "nginx process killed by OOM-killer",
+    "php-fpm consumed 95% of available RAM due to memory leak in v2.4.1",
+    "Web endpoints returned 502 Bad Gateway"
+  ],
+  "root_cause": "PHP-FPM memory leak in application version 2.4.1 - child processes not releasing memory after request completion",
+  "resolution": "1. Restarted nginx and php-fpm services. 2. Temporarily reduced pm.max_children from 50 to 30. 3. Deployed hotfix v2.4.2 that fixed the memory leak. 4. Set up proactive memory monitoring with alert at 80%.",
+  "sop_used": "sop-oom-killer",
+  "diagnosis_commands_run": [
+    "free -h",
+    "ps aux --sort=-%mem | head -15",
+    "dmesg -T | grep -i 'out of memory' | tail -20",
+    "systemctl status nginx"
+  ],
+  "time_to_resolve": "15 minutes",
+  "follow_up": "Upgrade php-fpm to v8.3, add pm.max_requests=500 to force child recycling",
+  "pattern_signatures": [
+    "out of memory",
+    "oom-killer",
+    "killed process nginx",
+    "php-fpm memory"
+  ]
+}

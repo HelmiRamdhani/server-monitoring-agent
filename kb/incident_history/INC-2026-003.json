@@ -1,0 +1,29 @@
+{
+  "incident_id": "INC-2026-003",
+  "date": "2026-09-20",
+  "server": "web-prod-01",
+  "severity": "warning",
+  "title": "SSH brute force attack from multiple IPs",
+  "symptoms": [
+    "500+ failed SSH login attempts in 10 minutes",
+    "Attacks from IPs in 185.x.x.x range",
+    "fail2ban not active (service was stopped)"
+  ],
+  "root_cause": "fail2ban service was accidentally stopped during routine maintenance and not restarted",
+  "resolution": "1. Restarted fail2ban service. 2. Blocked top 5 attacking IPs at iptables level. 3. Verified fail2ban auto-start on boot. 4. Added monitoring check for fail2ban service status.",
+  "sop_used": "sop-ssh-brute-force",
+  "diagnosis_commands_run": [
+    "grep 'Failed password' /var/log/auth.log | wc -l",
+    "grep 'Failed password' /var/log/auth.log | awk '{print $(NF-3)}' | sort | uniq -c | sort -rn | head -20",
+    "systemctl status fail2ban",
+    "sshd -T | grep -E 'maxauthtries|permitrootlogin'"
+  ],
+  "time_to_resolve": "8 minutes",
+  "follow_up": "Configure fail2ban with aggressive SSH jail settings, add fail2ban status to monitoring dashboard",
+  "pattern_signatures": [
+    "failed password",
+    "invalid user",
+    "sshd authentication failure",
+    "fail2ban stopped"
+  ]
+}

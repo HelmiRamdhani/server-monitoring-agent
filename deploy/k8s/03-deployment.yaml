@@ -1,0 +1,81 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: server-monitoring-agent
+  namespace: monitoring
+  labels:
+    app: server-monitoring-agent
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: server-monitoring-agent
+  template:
+    metadata:
+      labels:
+        app: server-monitoring-agent
+    spec:
+      serviceAccountName: server-monitoring-agent
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        fsGroup: 10001
+      containers:
+        - name: agent
+          image: platform-bigdata/server-monitoring-agent:latest
+          imagePullPolicy: IfNotPresent
+          args: ["python", "src/main.py", "--config", "/app/config/config.yaml", "--webhook", "--loop"]
+          ports:
+            - name: webhook
+              containerPort: 8080
+              protocol: TCP
+          env:
+            - name: AGENT_ENV
+              value: "production"
+            - name: TELEGRAM_BOT_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: monitoring-secrets
+                  key: telegram-bot-token
+                  optional: true
+            - name: TELEGRAM_CHAT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: monitoring-secrets
+                  key: telegram-chat-id
+                  optional: true
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "512Mi"
+            limits:
+              cpu: "1000m"
+              memory: "1Gi"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 15
+            periodSeconds: 20
+            timeoutSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 3
+          volumeMounts:
+            - name: config-volume
+              mountPath: /app/config/config.yaml
+              subPath: config.yaml
+              readOnly: true
+            - name: output-volume
+              mountPath: /app/output
+      volumes:
+        - name: config-volume
+          configMap:
+            name: server-monitoring-agent-config
+        - name: output-volume
+          emptyDir: {}
+

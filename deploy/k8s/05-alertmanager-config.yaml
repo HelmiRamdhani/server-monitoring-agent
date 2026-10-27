@@ -1,0 +1,30 @@
+# ==============================================================================
+# Prometheus Alertmanager Integration Config Snippet
+# Add this snippet to your alertmanager.yml configuration in the cluster
+# ==============================================================================
+
+# 1. Add route to forward critical/warning alerts to the Agent Webhook
+route:
+  group_by: ['alertname', 'cluster', 'service']
+  group_wait: 10s
+  group_interval: 1m
+  repeat_interval: 4h
+  receiver: 'default-receiver'
+  routes:
+    - match_re:
+        severity: "critical|warning"
+      receiver: 'server-monitoring-agent-webhook'
+      continue: true
+
+# 2. Add receiver pointing to the internal ClusterIP Service
+receivers:
+  - name: 'default-receiver'
+    # your existing email/slack receivers...
+
+  - name: 'server-monitoring-agent-webhook'
+    webhook_configs:
+      - url: 'http://server-monitoring-agent.monitoring.svc.cluster.local:8080/webhook/prometheus'
+        send_resolved: true
+        http_config:
+          follow_redirects: true
+

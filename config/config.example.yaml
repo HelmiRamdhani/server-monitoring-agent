@@ -1,0 +1,187 @@
+# Server Monitoring Agent - Configuration File
+# The Workplace Brain — IT Ops & Incident Co-Pilot
+# Copy this file to config.yaml and adjust values as needed.
+
+# ============================================================
+# Server Configuration
+# ============================================================
+server:
+  # Hostname or IP of the server being monitored
+  # Use "localhost" if the agent runs on the same server
+  host: "localhost"
+  # Friendly name shown in reports
+  label: "Server-01"
+  # OS type: "linux" or "windows" (auto-detected if omitted)
+  os: ""
+
+
+# ============================================================
+# Monitoring Thresholds
+# ============================================================
+thresholds:
+  cpu_warning: 75        # percent
+  cpu_critical: 90        # percent
+  memory_warning: 80     # percent
+  memory_critical: 92    # percent
+  disk_warning: 80       # percent
+  disk_critical: 90      # percent
+  uptime_min_seconds: 300  # alert if uptime < this value (recent reboot)
+
+
+# ============================================================
+# Syslog Configuration
+# ============================================================
+syslog:
+  # Log file paths to monitor
+  # Linux:   /var/log/syslog or /var/log/messages
+  # Windows: C:\\Windows\\System32\\Winevt\\Logs\\Security.evtx
+  log_files:
+    - "/var/log/syslog"
+    - "/var/log/auth.log"
+  # Number of recent lines to read per cycle
+  tail_lines: 500
+  # Patterns that indicate incidents (regex)
+  # Each pattern: { name, regex, severity }
+  patterns:
+    - name: "SSH failed login"
+      regex: "Failed password|Invalid user"
+      severity: "warning"
+    - name: "Service crash"
+      regex: "segfault|core dumped|killed process"
+      severity: "critical"
+    - name: "Out of memory"
+      regex: "Out of memory|oom-killer|oom_kill"
+      severity: "critical"
+    - name: "Disk full"
+      regex: "No space left on device|disk full"
+      severity: "critical"
+    - name: "Kernel panic"
+      regex: "kernel panic|not syncing"
+      severity: "critical"
+    - name: "Connection refused"
+      regex: "Connection refused|connection timed out"
+      severity: "warning"
+    - name: "General error"
+      regex: "\\[ERROR\\]|ERROR|FATAL"
+      severity: "error"
+
+
+# ============================================================
+# Report Configuration
+# ============================================================
+report:
+  # Output directory for generated PDF files
+  output_dir: "output"
+  # Report filename pattern (uses Python strftime)
+  filename_pattern: "report_%Y%m%d_%H%M%S.pdf"
+  # Company / team name shown in report header
+  team_name: "Tim Operasional"
+  # Include metrics chart in report (requires matplotlib optional)
+  include_chart: false
+
+
+# ============================================================
+# Email Notification (SMTP)
+# ============================================================
+email:
+  enabled: true
+  smtp_host: "smtp.gmail.com"
+  smtp_port: 587
+  smtp_user: "your-email@gmail.com"
+  smtp_password: "your-app-password"
+  use_tls: true
+  from_addr: "your-email@gmail.com"
+  to_addrs:
+    - "ops-team@company.com"
+  subject: "Server Monitoring Report - {date}"
+
+
+# ============================================================
+# Microsoft Teams Notification (Incoming Webhook)
+# ============================================================
+teams:
+  enabled: true
+  webhook_url: "https://your-tenant.webhook.office.com/webhookb2/..."
+  # Message title shown in Teams card
+  message_title: "Server Monitoring Report"
+
+
+# ============================================================
+# Telegram ChatOps Notification (Bot API)
+# ============================================================
+telegram:
+  enabled: false
+  # Bot Token from @BotFather (e.g. 123456789:ABCdefGhIJKlmNoPQRsTUVwxyZ)
+  bot_token: ""
+  # Target Chat ID or Channel ID (e.g. -100123456789 or user ID)
+  chat_id: ""
+  # Automatically send generated PDF report to Telegram
+  send_pdf: true
+
+
+# ============================================================
+# Schedule Configuration
+# ============================================================
+schedule:
+  # Run interval in minutes (agent will loop automatically)
+  interval_minutes: 30
+  # Run only once and exit (set false for continuous monitoring)
+  run_once: false
+
+
+# ============================================================
+# Logging (Agent internal log)
+# ============================================================
+agent_log:
+  level: "INFO"          # DEBUG, INFO, WARNING, ERROR
+  file: "output/agent.log"
+
+
+# ============================================================
+# Webhook Receiver (event-driven mode)
+# ============================================================
+webhook:
+  host: "0.0.0.0"
+  port: 8080
+  # Endpoints:
+  #   POST /webhook/prometheus  — Prometheus Alertmanager alerts
+  #   POST /webhook/zabbix     — Zabbix alerts
+  #   POST /webhook/jira       — Jira/helpdesk ticket events
+  #   POST /webhook/generic     — Generic alert payloads
+  #   GET  /health             — Health check
+
+
+# ============================================================
+# Knowledge Base (local file-based)
+# ============================================================
+knowledge_base:
+  dir: "kb"  # relative to project root
+  # Structure:
+  #   kb/sop/              — SOP documents (Markdown with frontmatter)
+  #   kb/architecture/     — Server architecture definitions (YAML)
+  #   kb/incident_history/ — Past incident records (JSON)
+
+
+# ============================================================
+# Monitoring API Query (for diagnosis engine)
+# ============================================================
+monitoring_api:
+  # Type: "prometheus", "zabbix", "grafana", or "" (disabled)
+  type: ""
+  url: "http://localhost:9090"
+  api_token: ""
+  # For Prometheus: queries to run on each diagnosis
+  # queries:
+  #   - 'up{instance="server-name"}'
+  #   - 'node_load1{instance="server-name"}'
+
+
+# ============================================================
+# Ticketing API (for feedback loop — auto-resolve tickets)
+# ============================================================
+ticketing_api:
+  # Type: "jira" or "generic"
+  type: ""
+  url: ""
+  token: ""
+  # For Jira: url should be base URL like "https://yourorg.atlassian.net"

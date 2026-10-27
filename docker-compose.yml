@@ -1,0 +1,26 @@
+version: "3.8"
+
+services:
+  monitoring-agent:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: platform-bigdata/server-monitoring-agent:latest
+    container_name: server-monitoring-agent
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./config/config.testing.yaml:/app/config/config.yaml:ro
+      - ./output:/app/output
+      - ./kb:/app/kb
+    environment:
+      - AGENT_ENV=production
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN:-}
+      - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID:-}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
