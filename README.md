@@ -1,21 +1,28 @@
-# Server Monitoring Agent
+# Server Monitoring Agent & Incident Co-Pilot
+**Platform Bigdata — Enterprise Multilayer Observability (Observe → Reason → Act)**
 
-Agent monitoring server berbasis Python untuk membaca metrik server (CPU, RAM, disk, uptime), memparse file syslog lokal, mendeteksi insiden, generate report PDF, dan mengirimnya ke tim operasional via email dan Microsoft Teams.
+Platform AIOps Incident Co-Pilot enterprise yang mengintegrasikan seluruh layer infrastruktur: **Host/VM** (psutil & syslog), **Container** (cgroup & Docker), **Kubernetes Pod** (CrashLoop, previous logs & events), **Distributed Storage** (Longhorn volume integrity), dan **Service APM** (OpenTelemetry traces p99, Google SRE SLI/SLO burn rate, serta eBPF kernel probes). Terhubung langsung dengan Telegram ChatOps interaktif (@hlm_alert_bot).
 
-## Arsitektur
+## Arsitektur Komponen
 
 ```
-Input → Proses → Incident Detection → Report PDF → Delivery
+Ingress (Webhook / Polling) → Knowledge Base SOP → Multilayer Diagnosis (18 Checks) → AI RCA → Delivery (PDF & Telegram ChatOps) → Feedback Loop
 ```
 
 | Komponen | File | Deskripsi |
 |----------|------|-----------|
 | Config loader | `src/modules/config_loader.py` | Load YAML config + setup logging |
-| Server monitor | `src/modules/server_monitor.py` | Kumpulkan metrik via psutil |
+| Server monitor | `src/modules/server_monitor.py` | Kumpulkan metrik via psutil (CPU, RAM, Disk, Uptime) |
 | Syslog parser | `src/modules/syslog_parser.py` | Baca syslog lokal + regex pattern matching |
-| Report generator | `src/modules/report_generator.py` | Generate PDF dengan ReportLab |
-| Notifier | `src/modules/notifier.py` | Kirim email (SMTP) + Teams (webhook) |
-| Main agent | `src/main.py` | Orkestrasi semua modul |
+| Knowledge Base | `src/modules/knowledge_base.py` | Repositori 8 SOP Markdown, topologi & histori insiden |
+| Diagnosis engine | `src/modules/diagnosis_engine.py` | 18 pemeriksaan read-only lintas seluruh layer |
+| K8s diagnostics | `src/modules/k8s_diagnostics.py` | Pod crash logs (--previous), events probe & restart pod |
+| APM & OTel engine | `src/modules/apm_otel_diagnostics.py` | OTel traces p99, SRE SLO burn rate (14.4x), eBPF probes |
+| Webhook receiver | `src/modules/webhook_receiver.py` | HTTP Ingress 8080 (Prometheus, Zabbix, Jira, OTLP) |
+| Feedback loop | `src/modules/feedback_loop.py` | Audit trail insiden, resolusi tiket & update KB |
+| Report generator | `src/modules/report_generator.py` | Generate PDF Snapshot, Weekly & Monthly ReportLab |
+| Notifier | `src/modules/notifier.py` | Kirim Telegram ChatOps (@hlm_alert_bot), Email & Teams |
+| Main agent | `src/main.py` | Orkestrasi alur kerja 6-tahap |
 
 ## Setup
 
