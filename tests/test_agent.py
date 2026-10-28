@@ -809,6 +809,38 @@ class TestCloudNativeDiagnostics(unittest.TestCase):
         self.assertGreater(len(res["degraded_volumes"]), 0)
         self.assertIn("pvc-clickhouse-analytics-01", res["summary"])
 
+    def test_k8s_get_pod_logs(self):
+        """Deep container crash logs should detect OutOfMemoryError stack trace."""
+        res = self.engine.get_pod_logs("kafka-broker-1")
+        self.assertEqual(res["status"], "critical")
+        self.assertTrue(res["has_crash_signature"])
+        self.assertIn("OutOfMemoryError", res["detected_signature"])
+        self.assertIn("Java heap space", res["logs"])
+
+    def test_k8s_get_pod_events(self):
+        """Pod event inspection should detect BackOff and probe failure warnings."""
+        res = self.engine.get_pod_events("kafka-broker-1")
+        self.assertEqual(res["status"], "critical")
+        self.assertGreater(res["warning_count"], 0)
+        self.assertIn("BackOff", res["summary"])
+
+    def test_k8s_diagnose_pod_resources(self):
+        """Resource limits evaluation should detect near-OOM memory usage."""
+        res = self.engine.diagnose_pod_resources()
+        self.assertEqual(res["status"], "critical")
+        self.assertGreater(res["total_inspected"], 0)
+        kafka_pod = next((p for p in res["pods"] if "kafka" in p["pod"]), None)
+        self.assertIsNotNone(kafka_pod)
+        self.assertGreaterEqual(kafka_pod["mem_pct"], 95.0)
+
+    def test_k8s_restart_pod(self):
+        """Safe pod restart should return success and audit message."""
+        res = self.engine.restart_pod("kafka-broker-1", initiator="Test-Operator")
+        self.assertTrue(res["success"])
+        self.assertEqual(res["action"], "restart_pod")
+        self.assertEqual(res["initiator"], "Test-Operator")
+        self.assertIn("kafka-broker-1", res["message"])
+
 
 # ================================================================
 # 11. Telegram Notifier Tests

@@ -475,8 +475,9 @@ def send_telegram_log_report(
         lines.append(f"")
 
         if check_output:
-            # Show up to 4 lines of output as code block
-            output_lines = [l for l in check_output.splitlines() if l.strip()][:4]
+            # Show up to 6 lines for crash logs / events, 4 lines for others
+            max_lines = 6 if "log" in check_name or "event" in check_name else 4
+            output_lines = [l for l in check_output.splitlines() if l.strip() and not l.strip().lower().startswith("status:")][:max_lines]
             if output_lines:
                 lines.append("Output Terdeteksi:")
                 lines.append("```")

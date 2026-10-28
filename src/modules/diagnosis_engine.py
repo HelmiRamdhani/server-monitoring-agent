@@ -271,6 +271,7 @@ class DiagnosisEngine:
             k8s_engine = K8sDiagnosticEngine()
 
             if is_k8s:
+                # 1. Pod Health Check
                 def _run_pod_diag():
                     res = k8s_engine.diagnose_pod_health()
                     return f"status: {res['status'].upper()}\n{res['summary']}"
@@ -280,6 +281,42 @@ class DiagnosisEngine:
                     check_name="k8s_pod_health",
                     command="kubectl get pods -n platform-bigdata",
                     runner=_run_pod_diag,
+                )
+
+                # 2. Deep Crash Logs Retrieval (kubectl logs --previous)
+                def _run_pod_crash_logs():
+                    res = k8s_engine.get_pod_logs()
+                    return f"status: {res['status'].upper()}\n{res['summary']}"
+
+                self._execute_check(
+                    check_type="kubernetes",
+                    check_name="k8s_pod_crash_logs",
+                    command="kubectl logs -n platform-bigdata --previous --tail=50",
+                    runner=_run_pod_crash_logs,
+                )
+
+                # 3. Pod Events Inspection (Probes & Scheduling)
+                def _run_pod_events():
+                    res = k8s_engine.get_pod_events()
+                    return f"status: {res['status'].upper()}\n{res['summary']}"
+
+                self._execute_check(
+                    check_type="kubernetes",
+                    check_name="k8s_pod_events",
+                    command="kubectl get events -n platform-bigdata --sort-by=.metadata.creationTimestamp",
+                    runner=_run_pod_events,
+                )
+
+                # 4. Pod Resource Limits vs Usage
+                def _run_pod_resources():
+                    res = k8s_engine.diagnose_pod_resources()
+                    return f"status: {res['status'].upper()}\n{res['summary']}"
+
+                self._execute_check(
+                    check_type="kubernetes",
+                    check_name="k8s_pod_resource_limits",
+                    command="kubectl top pods -n platform-bigdata --containers",
+                    runner=_run_pod_resources,
                 )
 
             if is_storage:
