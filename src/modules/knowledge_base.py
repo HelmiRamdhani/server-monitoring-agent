@@ -91,12 +91,12 @@ class KnowledgeBase:
             try:
                 frontmatter = yaml.safe_load(fm_match.group(1))
                 if frontmatter:
-                    entry["id"] = frontmatter.get("ID", filepath.stem)
-                    entry["triggers"] = frontmatter.get("Triggers", [])
+                    entry["id"] = frontmatter.get("ID") or frontmatter.get("id") or filepath.stem
+                    entry["triggers"] = frontmatter.get("Triggers") or frontmatter.get("triggers") or []
                     if isinstance(entry["triggers"], str):
                         entry["triggers"] = [t.strip() for t in entry["triggers"].split(",")]
-                    entry["severity"] = frontmatter.get("Severity", "warning")
-                    entry["title"] = frontmatter.get("title", filepath.stem)
+                    entry["severity"] = frontmatter.get("Severity") or frontmatter.get("severity") or "warning"
+                    entry["title"] = frontmatter.get("title") or frontmatter.get("Title") or filepath.stem
             except yaml.YAMLError as e:
                 log.warning("YAML parse error in %s: %s", filepath, e)
 

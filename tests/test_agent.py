@@ -517,6 +517,23 @@ class TestWebhookReceiver(unittest.TestCase):
         wp2 = parse_webhook("unknown_system", {"message": "test"})
         self.assertEqual(wp2.source, "unknown_system")
 
+    def test_parse_opentelemetry_alert(self):
+        """parse_webhook should correctly parse OpenTelemetry OTLP / SLO payloads."""
+        payload = {
+            "service_name": "checkout-service",
+            "title": "LatencySLOBreach",
+            "severity": "critical",
+            "p99_latency_ms": 845.0,
+            "burn_rate": 14.4,
+            "message": "p99 latency 845ms exceeds SLO threshold of 200ms",
+        }
+        wp = parse_webhook("opentelemetry", payload)
+        ctx = wp.to_incident_context()
+        self.assertEqual(wp.source, "opentelemetry")
+        self.assertEqual(ctx["server"], "checkout-service")
+        self.assertEqual(ctx["severity"], "critical")
+        self.assertIn("OTel:checkout-service:LatencySLOBreach", ctx["patterns"])
+
 
 # ================================================================
 # 7. Feedback Loop Tests
@@ -861,6 +878,43 @@ class TestTelegramNotifier(unittest.TestCase):
         cfg = {"telegram": {"enabled": True, "bot_token": "", "chat_id": ""}}
         result = send_telegram("dummy.pdf", {}, {}, cfg)
         self.assertFalse(result)
+
+
+# ================================================================
+# 12. OpenTelemetry APM, SRE SLO, and eBPF Diagnostics Tests
+# ================================================================
+class TestAPMOtelDiagnostics(unittest.TestCase):
+    """Test OpenTelemetry APM, SRE SLO, and eBPF Kernel diagnostics."""
+
+    def setUp(self):
+        from src.modules.apm_otel_diagnostics import APMOtelDiagnosticEngine
+        self.engine = APMOtelDiagnosticEngine()
+
+    def test_service_apm_diagnostics(self):
+        """Service APM should detect p99 latency breach and root cause span."""
+        res = self.engine.diagnose_service_apm("checkout-service")
+        self.assertEqual(res["status"], "critical")
+        self.assertGreater(res["total_services"], 0)
+        svc = res["services"][0]
+        self.assertGreater(svc["latency_p99_ms"], svc["target_p99_ms"])
+        self.assertIsNotNone(svc["bottleneck_span"])
+        self.assertIn("Bottleneck Span", res["summary"])
+
+    def test_sre_slo_burn_rate(self):
+        """Google SRE SLO evaluation should detect critical 14.4x burn rate."""
+        res = self.engine.evaluate_sre_slo("checkout-service")
+        self.assertEqual(res["status"], "critical")
+        eval_item = res["evaluations"][0]
+        self.assertEqual(eval_item["burn_rate_1h"], "14.4x")
+        self.assertIn("Imminent SLO Breach", eval_item["risk_level"])
+
+    def test_ebpf_kernel_telemetry(self):
+        """eBPF kernel telemetry should detect TCP retransmissions and block I/O latency."""
+        res = self.engine.diagnose_ebpf_kernel()
+        self.assertIn("status", res)
+        self.assertEqual(res["status"], "critical")
+        self.assertIn("TCP Retransmits", res["summary"])
+        self.assertIn("Block I/O", res["summary"])
 
 
 # ================================================================

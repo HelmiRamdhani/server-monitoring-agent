@@ -111,6 +111,28 @@ def parse_jira_ticket(payload: dict) -> WebhookPayload:
     return wp
 
 
+def parse_opentelemetry_alert(payload: dict) -> WebhookPayload:
+    """Parse OpenTelemetry OTLP / SRE SLO breach webhook payload."""
+    wp = WebhookPayload()
+    wp.source = "opentelemetry"
+    wp.raw_payload = payload
+
+    service = payload.get("service", payload.get("service_name", "unknown-service"))
+    event = payload.get("event", payload.get("title", "Service Latency Degradation"))
+    wp.alert_name = f"OTel:{service}:{event}"
+    wp.severity = payload.get("severity", "critical")
+    wp.server = payload.get("host", service)
+    p99 = payload.get("p99_latency_ms", "N/A")
+    burn_rate = payload.get("burn_rate", "N/A")
+    wp.message = (
+        payload.get("message")
+        or f"Service '{service}' latency p99={p99}ms, Error Budget BurnRate={burn_rate}x"
+    )
+    wp.timestamp = payload.get("timestamp", wp.timestamp)
+
+    return wp
+
+
 def parse_webhook(source: str, payload: dict) -> WebhookPayload:
     """
     Route webhook parsing based on source type.
@@ -128,6 +150,10 @@ def parse_webhook(source: str, payload: dict) -> WebhookPayload:
         "zabbix": parse_zabbix_alert,
         "jira": parse_jira_ticket,
         "helpdesk": parse_jira_ticket,
+        "opentelemetry": parse_opentelemetry_alert,
+        "otel": parse_opentelemetry_alert,
+        "otlp": parse_opentelemetry_alert,
+        "slo": parse_opentelemetry_alert,
         "generic": parse_generic_alert,
     }
 

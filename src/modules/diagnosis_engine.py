@@ -67,6 +67,9 @@ class DiagnosisEngine:
         # Run Kubernetes & Cloud-Native Storage checks
         self._run_cloud_native_checks(incident_context)
 
+        # Run OpenTelemetry APM & eBPF Kernel checks
+        self._run_apm_ebpf_checks(incident_context)
+
         # Run log aggregation queries
         self._run_log_query_checks(incident_context)
 
@@ -332,6 +335,66 @@ class DiagnosisEngine:
                 )
         except Exception as e:
             log.warning("Could not execute cloud-native checks: %s", e)
+
+    def _run_apm_ebpf_checks(self, incident_context: dict):
+        """Run OpenTelemetry APM, Google SRE SLI/SLO, and eBPF Kernel diagnostic checks."""
+        patterns = [p.lower() for p in incident_context.get("patterns", [])]
+        text = incident_context.get("text", "").lower()
+
+        is_apm = any(kw in " ".join(patterns) or kw in text for kw in [
+            "service", "api", "latency", "slo", "trace", "http", "5xx", "rate", "slow", "checkout", "payment", "burn",
+        ])
+        is_ebpf = any(kw in " ".join(patterns) or kw in text for kw in [
+            "ebpf", "kernel", "retransmit", "drop", "syscall", "network", "tcp", "io",
+        ])
+
+        try:
+            try:
+                from modules.apm_otel_diagnostics import APMOtelDiagnosticEngine
+            except ImportError:
+                from src.modules.apm_otel_diagnostics import APMOtelDiagnosticEngine
+
+            apm_engine = APMOtelDiagnosticEngine()
+
+            if is_apm:
+                # 1. Service APM Latency & Trace Breakdown
+                def _run_apm_diag():
+                    res = apm_engine.diagnose_service_apm()
+                    return f"status: {res['status'].upper()}\n{res['summary']}"
+
+                self._execute_check(
+                    check_type="apm",
+                    check_name="otel_service_traces",
+                    command="otel-collector query traces --service platform-bigdata",
+                    runner=_run_apm_diag,
+                )
+
+                # 2. Google SRE SLI/SLO & Error Budget Burn Rate
+                def _run_slo_diag():
+                    res = apm_engine.evaluate_sre_slo()
+                    return f"status: {res['status'].upper()}\n{res['summary']}"
+
+                self._execute_check(
+                    check_type="sre",
+                    check_name="slo_burn_rate",
+                    command="sre-slo-engine evaluate --window 1h",
+                    runner=_run_slo_diag,
+                )
+
+            if is_ebpf:
+                # 3. eBPF Kernel Probes & Retransmit Telemetry
+                def _run_ebpf_diag():
+                    res = apm_engine.diagnose_ebpf_kernel()
+                    return f"status: {res['status'].upper()}\n{res['summary']}"
+
+                self._execute_check(
+                    check_type="ebpf",
+                    check_name="ebpf_kernel_probes",
+                    command="bpftrace -e 'tracepoint:tcp:tcp_retransmit_skb'",
+                    runner=_run_ebpf_diag,
+                )
+        except Exception as e:
+            log.warning("Could not execute APM / eBPF checks: %s", e)
 
     def _check_disk_usage(self) -> str:
         """Check disk usage across mounted filesystems."""
